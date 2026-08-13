@@ -40,7 +40,11 @@ export async function GET(request: Request) {
     return new NextResponse(buffer, {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400", // 24h cache for images
+        // Private: browsers cache per-URL, but Netlify's shared (Durable) cache
+        // keys route-handler responses by path only — "public" made every
+        // /api/images request return the first cached image. Private keeps
+        // browser caching without collapsing all images into one entry.
+        "Cache-Control": "private, max-age=86400", // 24h browser cache for images
       },
     });
   } catch {

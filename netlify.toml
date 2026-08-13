@@ -9,3 +9,12 @@
   for = "/api/*"
   [headers.values]
     Cache-Control = "public, max-age=900, stale-while-revalidate=3600"
+
+# The image proxy's response varies by its ?url= param, but Netlify's shared
+# cache keys route-handler responses by path only. Keep the proxy private so
+# browsers cache each image individually instead of all images collapsing into
+# one entry (overrides the public /api/* rule above).
+[[headers]]
+  for = "/api/images"
+  [headers.values]
+    Cache-Control = "private, max-age=86400"
