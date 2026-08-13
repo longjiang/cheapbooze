@@ -76,7 +76,7 @@ export function ProductDetail({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-2 space-y-4 px-4 pb-6">
           {/* Product Image */}
           <div className="relative aspect-square bg-zinc-50 dark:bg-zinc-900 rounded-lg overflow-hidden">
             {product.image ? (
