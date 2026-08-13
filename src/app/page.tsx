@@ -233,6 +233,12 @@ export default function Home() {
                 Updated {formatFetchedTime(fetchedAt)}
               </span>
             )}
+            <ProductFilters
+              filters={filters}
+              categories={categories}
+              maxPriceAvailable={maxPriceAvailable}
+              onChange={setFilters}
+            />
             <button
               onClick={fetchProducts}
               disabled={loading}
@@ -244,16 +250,6 @@ export default function Home() {
               Refresh
             </button>
           </div>
-        </div>
-
-        {/* Filters bar - collapsible on mobile */}
-        <div className="max-w-7xl mx-auto px-4 pb-3">
-          <ProductFilters
-            filters={filters}
-            categories={categories}
-            maxPriceAvailable={maxPriceAvailable}
-            onChange={setFilters}
-          />
         </div>
       </header>
 
