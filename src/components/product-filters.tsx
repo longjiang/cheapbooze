@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Search, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export type SortOption =
   | "value-asc"

@@ -39,13 +39,21 @@ alcohol.
   product's full metadata.
 - REQ-F-07: Product images load through the `/api/images` proxy.
 - REQ-F-08: On fetch failure, an error state with a "retry" action is shown.
+- REQ-F-09: Products are rendered incrementally (infinite scroll): the grid
+  mounts a window of 60 products and appends more as the user scrolls, driven by
+  an `IntersectionObserver` sentinel.
+- REQ-F-10: Changing any filter or sort order resets the scroll window back to
+  the first 60 results.
+- REQ-F-11: Card images use `loading="lazy"` + `decoding="async"` so only
+  images near the viewport are fetched.
 
 ### Non-functional
 
 - REQ-N-01: The catalog fetch must be cached server-side (30-min TTL) to avoid
   repeated upstream calls to BCL.
-- REQ-N-02: The page should remain responsive while sorting/filtering up to the
-  full catalog (~10k items) on a mid-range device.
+- REQ-N-02: The page must stay responsive with the full catalog (~10k items):
+  only a window of cards is mounted in the DOM at a time (infinite scroll), and
+  images are lazy-loaded.
 - REQ-N-03: Image proxying must only allow `www.bcliquorstores.com` as the
   source host (SSRF guard).
 
@@ -57,3 +65,6 @@ alcohol.
 - [ ] Clicking a card opens the detail sheet with accurate data.
 - [ ] All `<img>` tags resolve through `/api/images`.
 - [ ] A network failure shows the error state; retry re-fetches successfully.
+- [ ] Only a window (~60) of cards is mounted initially; scrolling appends more.
+- [ ] Changing filters/sort resets the list back to the first window.
+- [ ] Images load lazily — the browser only fetches cards near the viewport.

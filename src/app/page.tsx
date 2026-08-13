@@ -57,15 +57,35 @@ export default function Home() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
+  // Infinite scroll: only render a window of products at a time
+  const PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [sentinelEl, setSentinelEl] = useState<HTMLDivElement | null>(null);
+
+  // Reset the visible window whenever filters change. Adjust state during
+  // render (React-recommended) rather than in an effect.
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (filters !== prevFilters) {
+    setPrevFilters(filters);
+    setVisibleCount(PAGE_SIZE);
+  }
+
+  async function fetchCatalog(): Promise<ProductsResponse> {
+    const res = await fetch("/api/products");
+    if (!res.ok) throw new Error("Failed to fetch");
+    return res.json();
+  }
+
+  const applyCatalog = (data: ProductsResponse) => {
+    setProducts(data.products);
+    setFetchedAt(data.fetchedAt);
+  };
+
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/products");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data: ProductsResponse = await res.json();
-      setProducts(data.products);
-      setFetchedAt(data.fetchedAt);
+      applyCatalog(await fetchCatalog());
     } catch {
       setError("Could not load products. Please try again.");
     } finally {
@@ -73,8 +93,23 @@ export default function Home() {
     }
   };
 
+  // Load on mount. Initial `loading` is already true and every setState call
+  // happens after `await`, so nothing runs synchronously in the effect body.
   useEffect(() => {
-    fetchProducts();
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchCatalog();
+        if (!cancelled) applyCatalog(data);
+      } catch {
+        if (!cancelled) setError("Could not load products. Please try again.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const categories = useMemo(() => {
@@ -132,6 +167,30 @@ export default function Home() {
     result = sortProducts(result, filters.sort);
     return result;
   }, [products, filters]);
+
+  // Only render the current window of products (infinite scroll). The slice is
+  // naturally bounded by the filtered list length.
+  const visibleProducts = useMemo(
+    () => filteredProducts.slice(0, visibleCount),
+    [filteredProducts, visibleCount]
+  );
+
+  // Load the next page when the sentinel scrolls into view
+  useEffect(() => {
+    if (!sentinelEl) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((count) =>
+            Math.min(count + PAGE_SIZE, filteredProducts.length)
+          );
+        }
+      },
+      { rootMargin: "1200px 0px" }
+    );
+    observer.observe(sentinelEl);
+    return () => observer.disconnect();
+  }, [sentinelEl, filteredProducts.length]);
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
@@ -225,7 +284,9 @@ export default function Home() {
             ? "Loading products..."
             : error
               ? ""
-              : `${filteredProducts.length} of ${products.length} products`}
+              : visibleProducts.length < filteredProducts.length
+                ? `Showing ${visibleProducts.length} of ${filteredProducts.length} products`
+                : `${filteredProducts.length} of ${products.length} products`}
         </p>
       </div>
 
@@ -268,16 +329,26 @@ export default function Home() {
         )}
 
         {!loading && !error && filteredProducts.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {filteredProducts.map((product, index) => (
-              <ProductCard
-                key={product.sku}
-                product={product}
-                rank={index + 1}
-                onSelect={handleSelectProduct}
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+              {visibleProducts.map((product, index) => (
+                <ProductCard
+                  key={product.sku}
+                  product={product}
+                  rank={index + 1}
+                  onSelect={handleSelectProduct}
+                />
+              ))}
+            </div>
+            {/* Infinite scroll sentinel: load next page when scrolled into view */}
+            {visibleProducts.length < filteredProducts.length && (
+              <div
+                ref={setSentinelEl}
+                aria-hidden
+                className="h-px"
               />
-            ))}
-          </div>
+            )}
+          </>
         )}
       </main>
 

@@ -37,6 +37,8 @@ export function ProductCard({ product, rank, onSelect }: ProductCardProps) {
             <img
               src={`/api/images?url=${encodeURIComponent(product.image.replace("http://","https://"))}`}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               className="size-full object-contain p-4 transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
