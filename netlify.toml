@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Cache the API responses at the CDN edge
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "public, max-age=900, stale-while-revalidate=3600"
