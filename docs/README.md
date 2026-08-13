@@ -13,6 +13,7 @@ sections:
 
 - [Architecture overview](arch/overview.md)
 - [Data flow](arch/data-flow.md)
+- [Runbook](arch/runbook.md)
 - [Product browsing spec](spec/product-browsing.md)
 - [ADRs](adr/README.md)
 

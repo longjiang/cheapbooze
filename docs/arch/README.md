@@ -7,6 +7,7 @@ its major building blocks.
 
 - [Overview](overview.md) — high-level system description and stack
 - [Data flow](data-flow.md) — how product and image data moves through the app
+- [Runbook](runbook.md) — how to run, build, and debug the app locally
 
 ## Out of scope
 
